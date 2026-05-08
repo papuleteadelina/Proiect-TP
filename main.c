@@ -1,16 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-// Funcții placeholder (urmează să fie implementate în viitor)
-void playGame() {
-    printf("\n[WIP] Logica jocului Simon Says va fi implementata aici.\n");
-}
+#include "simon.h"
 
 void showLeaderboard() {
     printf("\n[WIP] Sistemul de clasament urmeaza sa fie adaugat.\n");
 }
 
 int main() {
+    srand(time(NULL));
     int optiune;
 
     do {
@@ -20,7 +15,12 @@ int main() {
         printf("3. Iesire\n");
         printf("Alege o optiune: ");
 
-        scanf("%d", &optiune);
+        if (scanf("%d", &optiune) != 1) {
+            clearInputBuffer();
+            optiune = 0;
+        } else {
+            clearInputBuffer();
+        }
 
         switch(optiune) {
             case 1:
