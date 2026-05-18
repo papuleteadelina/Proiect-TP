@@ -11,5 +11,6 @@ void clearScreen();
 void getRandomSequence(const char* filename, char* buffer);
 void playGame();
 void clearInputBuffer();
+void removeSpaces(char* str);
 
 #endif
