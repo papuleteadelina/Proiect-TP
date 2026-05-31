@@ -1,9 +1,5 @@
 #include "simon.h"
 
-void showLeaderboard() {
-    printf("\n[WIP] Sistemul de clasament urmeaza sa fie adaugat.\n");
-}
-
 int main() {
     srand(time(NULL));
     int optiune;

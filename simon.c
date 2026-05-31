@@ -1,17 +1,14 @@
 #include "simon.h"
 
-// Curata buffer-ul de citire
 void clearInputBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF) { }
 }
 
-// Curata ecranul
 void clearScreen() {
     system("clear || cls");
 }
 
-// Elimina spatiile si enter-urile pentru a compara corect (ex: "1 5" devine "15")
 void removeSpaces(char* str) {
     int i = 0, j = 0;
     while(str[i]) {
@@ -23,7 +20,6 @@ void removeSpaces(char* str) {
     str[j] = '\0';
 }
 
-// Extrage linia aleatorie din fisier
 void getRandomSequence(const char* filename, char* buffer) {
     FILE* file = fopen(filename, "r");
     if (!file) {
@@ -52,7 +48,48 @@ void getRandomSequence(const char* filename, char* buffer) {
     fclose(file);
 }
 
-// Logica principala a jocului
+// Functie necesara pentru qsort (sorteaza descrescator)
+int compareScores(const void* a, const void* b) {
+    PlayerScore* p1 = (PlayerScore*)a;
+    PlayerScore* p2 = (PlayerScore*)b;
+    return p2->score - p1->score;
+}
+
+void showLeaderboard() {
+    FILE* f = fopen("scoruri.txt", "r");
+    if(!f) {
+        printf("\nNu exista scoruri salvate momentan. Fii primul care joaca!\n");
+        return;
+    }
+
+    PlayerScore scores[100];
+    int count = 0;
+    char line[256];
+
+    // Citim din fisier
+    while(fgets(line, sizeof(line), f)) {
+        char* sep = strstr(line, " - ");
+        if(sep) {
+            *sep = '\0';
+            strcpy(scores[count].name, line);
+            scores[count].score = atoi(sep + 3);
+            count++;
+        }
+    }
+    fclose(f);
+
+    // Sortam cu qsort
+    qsort(scores, count, sizeof(PlayerScore), compareScores);
+
+    // Afisam Top 5
+    printf("\n--- CLASAMENT (TOP 5) ---\n");
+    int limit = (count < 5) ? count : 5;
+    for(int i = 0; i < limit; i++) {
+        printf("%d. %s - %d puncte\n", i + 1, scores[i].name, scores[i].score);
+    }
+    printf("\n");
+}
+
 void playGame() {
     int choice;
     printf("\nAlege tipul de secventa:\n1. Cifre\n2. Litere\n3. Cuvinte\nOptiune: ");
@@ -69,8 +106,8 @@ void playGame() {
     scanf("%d", &diff);
     clearInputBuffer();
 
-    int timeLimit = (diff == 1) ? 4 : (diff == 2) ? 3 : 2; // [cite: 29, 30, 31, 32, 33]
-    int lives = 3; // [cite: 34, 35, 36]
+    int timeLimit = (diff == 1) ? 4 : (diff == 2) ? 3 : 2;
+    int lives = 3;
     int score = 0;
 
     char playerName[50];
@@ -78,26 +115,23 @@ void playGame() {
     scanf("%s", playerName);
     clearInputBuffer();
 
-    // Cat timp jucatorul are vieti, jocul continua
     while(lives > 0) {
         char sequence[256];
         getRandomSequence(filename, sequence);
 
         clearScreen();
-        printf("\nMemoreaza secventa:\n\n%s\n\n", sequence); // [cite: 10]
+        printf("\nMemoreaza secventa:\n\n%s\n\n", sequence);
         fflush(stdout);
         sleep(timeLimit);
 
-        clearScreen(); // [cite: 11]
+        clearScreen();
         char input[256];
-        printf("Introdu secventa: "); // [cite: 12]
+        printf("Introdu secventa: ");
 
-        // Citim raspunsul (cu tot cu spatii)
         if(fgets(input, sizeof(input), stdin) == NULL) {
             strcpy(input, "");
         }
 
-        // Curatam ambele siruri de spatii ca sa le putem compara
         char cleanSeq[256];
         strcpy(cleanSeq, sequence);
         removeSpaces(cleanSeq);
@@ -106,22 +140,25 @@ void playGame() {
         strcpy(cleanInput, input);
         removeSpaces(cleanInput);
 
-        // Verificam daca raspunsul este corect [cite: 13]
         if(strcmp(cleanSeq, cleanInput) == 0) {
-            printf("\nCORECT!\n"); // [cite: 15]
+            printf("\nCORECT!\n");
             score++;
             sleep(2);
         } else {
-            lives--; // [cite: 37, 38]
+            lives--;
             if(lives == 0) {
-                printf("\nGAME OVER\nScor final: %d\n", score); // [cite: 39, 40, 41]
+                printf("\nGAME OVER\nScor final: %d\n", score);
             } else {
-                printf("\nGRESIT!\nVieti ramase: %d\n", lives); // [cite: 14]
+                printf("\nGRESIT!\nVieti ramase: %d\n", lives);
             }
             sleep(2);
         }
     }
 
-    printf("\n[WIP] In viitor, scorul lui %s va fi salvat in fisierul scoruri.txt!\n", playerName);
-    sleep(2);
+    // Partea NOUA: Salvarea in fisier
+    FILE* f = fopen("scoruri.txt", "a");
+    if(f) {
+        fprintf(f, "%s - %d\n", playerName, score);
+        fclose(f);
+    }
 }
